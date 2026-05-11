@@ -1,39 +1,61 @@
-CREATE DATABASE FinanceDB;
+/* SQL Queries for Financial Fraud Detection - Dataset v3 */
 
 USE FinanceDB;
 
-SELECT * FROM dbo.data_v3;
+-- 1. Overview of Transactions
+SELECT * FROM transactions_v3 LIMIT 10;
 
-/* DRAWING OUT INSIGHTS FROM THE DATA*/
--- 1. Calculate the total number of transactions and the total amount for each transaction type
-SELECT transaction_type, COUNT(*) AS total_transactions, ROUND(SUM(amount),4) AS total_amount 
-FROM dbo.data_v3
+-- 2. Total transactions and total amount for each transaction type
+SELECT 
+    transaction_type, 
+    COUNT(*) AS total_transactions, 
+    ROUND(SUM(amount), 2) AS total_amount 
+FROM transactions_v3
 GROUP BY transaction_type;
 
--- 2. Calculate the average transaction amount for each transaction type
-SELECT transaction_type, ROUND(AVG(amount),4) AS average_amount
-FROM dbo.data_v3
-GROUP BY transaction_type;
-
--- 3. Identify the top 5 customers with the highest total transaction amounts
-SELECT customer_id, ROUND(SUM(amount),4) AS total_amount
-FROM dbo.data_v3
-GROUP BY customer_id
+-- 3. Top 5 Users with the highest total transaction amounts
+SELECT 
+    user_id, 
+    ROUND(SUM(amount), 2) AS total_amount
+FROM transactions_v3
+GROUP BY user_id
 ORDER BY total_amount DESC
 LIMIT 5;
 
--- 4. Calculate the total number of transactions and the total amount for each month
-SELECT MONTH(transaction_date) AS month, COUNT(*) AS total_transactions, ROUND(SUM(amount),4) AS total_amount
-FROM dbo.data_v3
-GROUP BY MONTH(transaction_date)
-ORDER BY month;
+-- 4. Fraud Rate by Merchant Category
+SELECT 
+    merchant_category, 
+    COUNT(*) AS total_transactions,
+    SUM(is_fraud) AS fraud_cases,
+    ROUND(AVG(is_fraud) * 100, 2) AS fraud_rate_percentage
+FROM transactions_v3
+GROUP BY merchant_category
+ORDER BY fraud_rate_percentage DESC;
 
--- 5. Identify the transaction type with the highest average transaction amount
-SELECT transaction_type, ROUND(AVG(amount),4) AS average_amount
-FROM dbo.data_v3
-GROUP BY transaction_type
-ORDER BY average_amount DESC
-LIMIT 1;
+-- 5. Impact of Failed Attempts on Fraud
+SELECT 
+    failed_attempts, 
+    COUNT(*) AS total_transactions,
+    SUM(is_fraud) AS fraud_cases,
+    ROUND(AVG(is_fraud) * 100, 2) AS fraud_rate_percentage
+FROM transactions_v3
+GROUP BY failed_attempts
+ORDER BY failed_attempts;
 
+-- 6. Foreign Transactions and Fraud
+SELECT 
+    is_foreign_transaction, 
+    COUNT(*) AS total_transactions,
+    SUM(is_fraud) AS fraud_cases,
+    ROUND(AVG(is_fraud) * 100, 2) AS fraud_rate_percentage
+FROM transactions_v3
+GROUP BY is_foreign_transaction;
 
-
+-- 7. Unusual Amount Flags vs Actual Fraud
+SELECT 
+    unusual_amount_flag, 
+    COUNT(*) AS total_transactions,
+    SUM(is_fraud) AS fraud_cases,
+    ROUND(AVG(is_fraud) * 100, 2) AS fraud_rate_percentage
+FROM transactions_v3
+GROUP BY unusual_amount_flag;
